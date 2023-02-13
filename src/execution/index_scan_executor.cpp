@@ -15,8 +15,8 @@ namespace bustub {
 IndexScanExecutor::IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanPlanNode *plan)
     : AbstractExecutor(exec_ctx) {}
 
-void IndexScanExecutor::Init() {}
+void IndexScanExecutor::Init() { throw NotImplementedException("IndexScanExecutor is not implemented"); }
 
-bool IndexScanExecutor::Next(Tuple *tuple, RID *rid) { return false; }
+auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool { return false; }
 
 }  // namespace bustub

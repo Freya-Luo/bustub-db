@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "buffer/buffer_pool_manager_instance.h"
+#include "buffer/buffer_pool_manager.h"
 #include "gtest/gtest.h"
 #include "logging/common.h"
 #include "storage/table/table_heap.h"
@@ -39,7 +39,7 @@ TEST(TupleTest, DISABLED_TableHeapTest) {
   // create transaction
   auto *transaction = new Transaction(0);
   auto *disk_manager = new DiskManager("test.db");
-  auto *buffer_pool_manager = new BufferPoolManagerInstance(50, disk_manager);
+  auto *buffer_pool_manager = new BufferPoolManager(50, disk_manager);
   auto *lock_manager = new LockManager();
   auto *log_manager = new LogManager(disk_manager);
   auto *table = new TableHeap(buffer_pool_manager, lock_manager, log_manager, transaction);
@@ -61,7 +61,7 @@ TEST(TupleTest, DISABLED_TableHeapTest) {
   std::shuffle(rid_v.begin(), rid_v.end(), std::default_random_engine(0));
   for (const auto &rid : rid_v) {
     // std::cout << i++ << std::endl;
-    assert(table->MarkDelete(rid, transaction) == 1);
+    BUSTUB_ENSURE(table->MarkDelete(rid, transaction) == 1, "");
   }
   disk_manager->ShutDown();
   remove("test.db");  // remove db file

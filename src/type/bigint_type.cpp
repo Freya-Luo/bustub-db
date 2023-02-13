@@ -65,9 +65,9 @@ namespace bustub {
 
 BigintType::BigintType() : IntegerParentType(BIGINT) {}
 
-bool BigintType::IsZero(const Value &val) const { return (val.value_.bigint_ == 0); }
+auto BigintType::IsZero(const Value &val) const -> bool { return (val.value_.bigint_ == 0); }
 
-Value BigintType::Add(const Value &left, const Value &right) const {
+auto BigintType::Add(const Value &left, const Value &right) const -> Value {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -79,7 +79,7 @@ Value BigintType::Add(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-Value BigintType::Subtract(const Value &left, const Value &right) const {
+auto BigintType::Subtract(const Value &left, const Value &right) const -> Value {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -91,7 +91,7 @@ Value BigintType::Subtract(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-Value BigintType::Multiply(const Value &left, const Value &right) const {
+auto BigintType::Multiply(const Value &left, const Value &right) const -> Value {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -103,7 +103,7 @@ Value BigintType::Multiply(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-Value BigintType::Divide(const Value &left, const Value &right) const {
+auto BigintType::Divide(const Value &left, const Value &right) const -> Value {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -118,7 +118,7 @@ Value BigintType::Divide(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-Value BigintType::Modulo(const Value &left, const Value &right) const {
+auto BigintType::Modulo(const Value &left, const Value &right) const -> Value {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -139,7 +139,7 @@ Value BigintType::Modulo(const Value &left, const Value &right) const {
     case TypeId::BIGINT:
       return ModuloValue<int64_t, int64_t>(left, right);
     case TypeId::DECIMAL:
-      return Value(TypeId::DECIMAL, ValMod(left.value_.bigint_, right.GetAs<double>()));
+      return {TypeId::DECIMAL, ValMod(left.value_.bigint_, right.GetAs<double>())};
     case TypeId::VARCHAR: {
       auto r_value = right.CastAs(TypeId::BIGINT);
       return ModuloValue<int64_t, int64_t>(left, r_value);
@@ -150,34 +150,34 @@ Value BigintType::Modulo(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-Value BigintType::Sqrt(const Value &val) const {
+auto BigintType::Sqrt(const Value &val) const -> Value {
   assert(val.CheckInteger());
   if (val.IsNull()) {
-    return Value(TypeId::DECIMAL, BUSTUB_DECIMAL_NULL);
+    return {TypeId::DECIMAL, BUSTUB_DECIMAL_NULL};
   }
 
   if (val.value_.bigint_ < 0) {
     throw Exception(ExceptionType::DECIMAL, "Cannot take square root of a negative number.");
   }
-  return Value(TypeId::DECIMAL, std::sqrt(val.value_.bigint_));
+  return {TypeId::DECIMAL, std::sqrt(val.value_.bigint_)};
 }
 
-Value BigintType::OperateNull(const Value &left __attribute__((unused)), const Value &right) const {
+auto BigintType::OperateNull(const Value &left __attribute__((unused)), const Value &right) const -> Value {
   switch (right.GetTypeId()) {
     case TypeId::TINYINT:
     case TypeId::SMALLINT:
     case TypeId::INTEGER:
     case TypeId::BIGINT:
-      return Value(TypeId::BIGINT, static_cast<int64_t>(BUSTUB_INT64_NULL));
+      return {TypeId::BIGINT, static_cast<int64_t>(BUSTUB_INT64_NULL)};
     case TypeId::DECIMAL:
-      return Value(TypeId::DECIMAL, static_cast<double>(BUSTUB_DECIMAL_NULL));
+      return {TypeId::DECIMAL, static_cast<double>(BUSTUB_DECIMAL_NULL)};
     default:
       break;
   }
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareEquals(const Value &left, const Value &right) const {
+auto BigintType::CompareEquals(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
 
@@ -190,7 +190,7 @@ CmpBool BigintType::CompareEquals(const Value &left, const Value &right) const {
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareNotEquals(const Value &left, const Value &right) const {
+auto BigintType::CompareNotEquals(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -202,7 +202,7 @@ CmpBool BigintType::CompareNotEquals(const Value &left, const Value &right) cons
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareLessThan(const Value &left, const Value &right) const {
+auto BigintType::CompareLessThan(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -214,7 +214,7 @@ CmpBool BigintType::CompareLessThan(const Value &left, const Value &right) const
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareLessThanEquals(const Value &left, const Value &right) const {
+auto BigintType::CompareLessThanEquals(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -226,7 +226,7 @@ CmpBool BigintType::CompareLessThanEquals(const Value &left, const Value &right)
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareGreaterThan(const Value &left, const Value &right) const {
+auto BigintType::CompareGreaterThan(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -238,7 +238,7 @@ CmpBool BigintType::CompareGreaterThan(const Value &left, const Value &right) co
   throw Exception("type error");
 }
 
-CmpBool BigintType::CompareGreaterThanEquals(const Value &left, const Value &right) const {
+auto BigintType::CompareGreaterThanEquals(const Value &left, const Value &right) const -> CmpBool {
   assert(left.CheckInteger());
   assert(left.CheckComparable(right));
   if (left.IsNull() || right.IsNull()) {
@@ -249,7 +249,7 @@ CmpBool BigintType::CompareGreaterThanEquals(const Value &left, const Value &rig
   throw Exception("type error");
 }
 
-std::string BigintType::ToString(const Value &val) const {
+auto BigintType::ToString(const Value &val) const -> std::string {
   assert(val.CheckInteger());
 
   if (val.IsNull()) {
@@ -263,62 +263,62 @@ void BigintType::SerializeTo(const Value &val, char *storage) const {
 }
 
 // Deserialize a value of the given type from the given storage space.
-Value BigintType::DeserializeFrom(const char *storage) const {
+auto BigintType::DeserializeFrom(const char *storage) const -> Value {
   int64_t val = *reinterpret_cast<const int64_t *>(storage);
-  return Value(type_id_, val);
+  return {type_id_, val};
 }
 
-Value BigintType::Copy(const Value &val) const { return Value(TypeId::BIGINT, val.value_.bigint_); }
+auto BigintType::Copy(const Value &val) const -> Value { return {TypeId::BIGINT, val.value_.bigint_}; }
 
-Value BigintType::CastAs(const Value &val, const TypeId type_id) const {
+auto BigintType::CastAs(const Value &val, const TypeId type_id) const -> Value {
   switch (type_id) {
     case TypeId::TINYINT: {
       if (val.IsNull()) {
-        return Value(type_id, BUSTUB_INT8_NULL);
+        return {type_id, BUSTUB_INT8_NULL};
       }
       if (val.GetAs<int64_t>() > BUSTUB_INT8_MAX || val.GetAs<int64_t>() < BUSTUB_INT8_MIN) {
         throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
       }
-      return Value(type_id, static_cast<int8_t>(val.GetAs<int64_t>()));
+      return {type_id, static_cast<int8_t>(val.GetAs<int64_t>())};
     }
     case TypeId::SMALLINT: {
       if (val.IsNull()) {
-        return Value(type_id, BUSTUB_INT16_NULL);
+        return {type_id, BUSTUB_INT16_NULL};
       }
       if (val.GetAs<int64_t>() > BUSTUB_INT16_MAX || val.GetAs<int64_t>() < BUSTUB_INT16_MIN) {
         throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
       }
-      return Value(type_id, static_cast<int16_t>(val.GetAs<int64_t>()));
+      return {type_id, static_cast<int16_t>(val.GetAs<int64_t>())};
     }
     case TypeId::INTEGER: {
       if (val.IsNull()) {
-        return Value(type_id, BUSTUB_INT32_NULL);
+        return {type_id, BUSTUB_INT32_NULL};
       }
       if (val.GetAs<int64_t>() > BUSTUB_INT32_MAX || val.GetAs<int64_t>() < BUSTUB_INT32_MIN) {
         throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
       }
-      return Value(type_id, static_cast<int32_t>(val.GetAs<int64_t>()));
+      return {type_id, static_cast<int32_t>(val.GetAs<int64_t>())};
     }
 
     case TypeId::BIGINT: {
       if (val.IsNull()) {
-        return Value(type_id, BUSTUB_INT64_NULL);
+        return {type_id, BUSTUB_INT64_NULL};
       }
       return Copy(val);
     }
 
     case TypeId::DECIMAL: {
       if (val.IsNull()) {
-        return Value(type_id, BUSTUB_DECIMAL_NULL);
+        return {type_id, BUSTUB_DECIMAL_NULL};
       }
-      return Value(type_id, static_cast<double>(val.GetAs<int64_t>()));
+      return {type_id, static_cast<double>(val.GetAs<int64_t>())};
     }
 
     case TypeId::VARCHAR: {
       if (val.IsNull()) {
-        return Value(TypeId::VARCHAR, nullptr, 0, false);
+        return {TypeId::VARCHAR, nullptr, 0, false};
       }
-      return Value(TypeId::VARCHAR, val.ToString());
+      return {TypeId::VARCHAR, val.ToString()};
     }
     default:
       break;

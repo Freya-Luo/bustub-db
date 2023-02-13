@@ -13,6 +13,7 @@
 #pragma once
 
 #include <atomic>
+#include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -40,7 +41,8 @@ class TransactionManager {
    * @param isolation_level an optional isolation level of the transaction.
    * @return an initialized transaction
    */
-  Transaction *Begin(Transaction *txn = nullptr, IsolationLevel isolation_level = IsolationLevel::REPEATABLE_READ);
+  auto Begin(Transaction *txn = nullptr, IsolationLevel isolation_level = IsolationLevel::REPEATABLE_READ)
+      -> Transaction *;
 
   /**
    * Commits a transaction.
@@ -60,13 +62,15 @@ class TransactionManager {
 
   /** The transaction map is a global list of all the running transactions in the system. */
   static std::unordered_map<txn_id_t, Transaction *> txn_map;
+  static std::shared_mutex txn_map_mutex;
 
   /**
    * Locates and returns the transaction with the given transaction ID.
    * @param txn_id the id of the transaction to be found, it must exist!
    * @return the transaction with the given transaction id
    */
-  static Transaction *GetTransaction(txn_id_t txn_id) {
+  static auto GetTransaction(txn_id_t txn_id) -> Transaction * {
+    std::shared_lock<std::shared_mutex> l(TransactionManager::txn_map_mutex);
     assert(TransactionManager::txn_map.find(txn_id) != TransactionManager::txn_map.end());
     auto *res = TransactionManager::txn_map[txn_id];
     assert(res != nullptr);
@@ -85,15 +89,48 @@ class TransactionManager {
    * @param txn the transaction whose locks should be released
    */
   void ReleaseLocks(Transaction *txn) {
-    std::unordered_set<RID> lock_set;
-    for (auto item : *txn->GetExclusiveLockSet()) {
-      lock_set.emplace(item);
+    /** Drop all row locks */
+    txn->LockTxn();
+    std::unordered_map<table_oid_t, std::unordered_set<RID>> row_lock_set;
+    for (const auto &s_row_lock_set : *txn->GetSharedRowLockSet()) {
+      for (auto rid : s_row_lock_set.second) {
+        row_lock_set[s_row_lock_set.first].emplace(rid);
+      }
     }
-    for (auto item : *txn->GetSharedLockSet()) {
-      lock_set.emplace(item);
+    for (const auto &x_row_lock_set : *txn->GetExclusiveRowLockSet()) {
+      for (auto rid : x_row_lock_set.second) {
+        row_lock_set[x_row_lock_set.first].emplace(rid);
+      }
     }
-    for (auto locked_rid : lock_set) {
-      lock_manager_->Unlock(txn, locked_rid);
+
+    /** Drop all table locks */
+    std::unordered_set<table_oid_t> table_lock_set;
+    for (auto oid : *txn->GetSharedTableLockSet()) {
+      table_lock_set.emplace(oid);
+    }
+    for (table_oid_t oid : *(txn->GetIntentionSharedTableLockSet())) {
+      table_lock_set.emplace(oid);
+    }
+    for (auto oid : *txn->GetExclusiveTableLockSet()) {
+      table_lock_set.emplace(oid);
+    }
+    for (auto oid : *txn->GetIntentionExclusiveTableLockSet()) {
+      table_lock_set.emplace(oid);
+    }
+    for (auto oid : *txn->GetSharedIntentionExclusiveTableLockSet()) {
+      table_lock_set.emplace(oid);
+    }
+    txn->UnlockTxn();
+
+    for (const auto &locked_table_row_set : row_lock_set) {
+      table_oid_t oid = locked_table_row_set.first;
+      for (auto rid : locked_table_row_set.second) {
+        lock_manager_->UnlockRow(txn, oid, rid);
+      }
+    }
+
+    for (auto oid : table_lock_set) {
+      lock_manager_->UnlockTable(txn, oid);
     }
   }
 

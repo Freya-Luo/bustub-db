@@ -17,7 +17,13 @@
 
 namespace bustub {
 
-std::string Column::ToString() const {
+auto Column::ToString(bool simplified) const -> std::string {
+  if (simplified) {
+    std::ostringstream os;
+    os << column_name_ << ":" << Type::TypeIdToString(column_type_);
+    return (os.str());
+  }
+
   std::ostringstream os;
 
   os << "Column[" << column_name_ << ", " << Type::TypeIdToString(column_type_) << ", "

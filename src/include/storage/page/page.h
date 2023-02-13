@@ -27,26 +27,29 @@ namespace bustub {
  */
 class Page {
   // There is book-keeping information inside the page that should only be relevant to the buffer pool manager.
-  friend class BufferPoolManagerInstance;
+  friend class BufferPoolManager;
 
  public:
   /** Constructor. Zeros out the page data. */
-  Page() { ResetMemory(); }
+  Page() {
+    data_ = new char[BUSTUB_PAGE_SIZE];
+    ResetMemory();
+  }
 
   /** Default destructor. */
-  ~Page() = default;
+  ~Page() { delete[] data_; }
 
   /** @return the actual data contained within this page */
-  inline char *GetData() { return data_; }
+  inline auto GetData() -> char * { return data_; }
 
   /** @return the page id of this page */
-  inline page_id_t GetPageId() { return page_id_; }
+  inline auto GetPageId() -> page_id_t { return page_id_; }
 
   /** @return the pin count of this page */
-  inline int GetPinCount() { return pin_count_; }
+  inline auto GetPinCount() -> int { return pin_count_; }
 
   /** @return true if the page in memory has been modified from the page on disk, false otherwise */
-  inline bool IsDirty() { return is_dirty_; }
+  inline auto IsDirty() -> bool { return is_dirty_; }
 
   /** Acquire the page write latch. */
   inline void WLatch() { rwlatch_.WLock(); }
@@ -61,7 +64,7 @@ class Page {
   inline void RUnlatch() { rwlatch_.RUnlock(); }
 
   /** @return the page LSN. */
-  inline lsn_t GetLSN() { return *reinterpret_cast<lsn_t *>(GetData() + OFFSET_LSN); }
+  inline auto GetLSN() -> lsn_t { return *reinterpret_cast<lsn_t *>(GetData() + OFFSET_LSN); }
 
   /** Sets the page LSN. */
   inline void SetLSN(lsn_t lsn) { memcpy(GetData() + OFFSET_LSN, &lsn, sizeof(lsn_t)); }
@@ -76,10 +79,12 @@ class Page {
 
  private:
   /** Zeroes out the data that is held within the page. */
-  inline void ResetMemory() { memset(data_, OFFSET_PAGE_START, PAGE_SIZE); }
+  inline void ResetMemory() { memset(data_, OFFSET_PAGE_START, BUSTUB_PAGE_SIZE); }
 
   /** The actual data that is stored within a page. */
-  char data_[PAGE_SIZE]{};
+  // Usually this should be stored as `char data_[BUSTUB_PAGE_SIZE]{};`. But to enable ASAN to detect page overflow,
+  // we store it as a ptr.
+  char *data_;
   /** The ID of this page. */
   page_id_t page_id_ = INVALID_PAGE_ID;
   /** The pin count of this page. */

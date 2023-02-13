@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 
+#include "container/hash/hash_function.h"
 #include "storage/index/b_plus_tree.h"
 #include "storage/index/index.h"
 
@@ -34,17 +35,28 @@ class BPlusTreeIndex : public Index {
 
   void ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) override;
 
-  INDEXITERATOR_TYPE GetBeginIterator();
+  auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 
-  INDEXITERATOR_TYPE GetBeginIterator(const KeyType &key);
+  auto GetBeginIterator(const KeyType &key) -> INDEXITERATOR_TYPE;
 
-  INDEXITERATOR_TYPE GetEndIterator();
+  auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
  protected:
   // comparator for key
   KeyComparator comparator_;
   // container
-  BPlusTree<KeyType, ValueType, KeyComparator> container_;
+  std::shared_ptr<BPlusTree<KeyType, ValueType, KeyComparator>> container_;
 };
+
+/** We only support index table with one integer key for now in BusTub. Hardcode everything here. */
+
+constexpr static const auto INTEGER_SIZE = 4;
+using IntegerKeyType = GenericKey<INTEGER_SIZE>;
+using IntegerValueType = RID;
+using IntegerComparatorType = GenericComparator<INTEGER_SIZE>;
+using BPlusTreeIndexForOneIntegerColumn = BPlusTreeIndex<IntegerKeyType, IntegerValueType, IntegerComparatorType>;
+using BPlusTreeIndexIteratorForOneIntegerColumn =
+    IndexIterator<IntegerKeyType, IntegerValueType, IntegerComparatorType>;
+using IntegerHashFunctionType = HashFunction<IntegerKeyType>;
 
 }  // namespace bustub

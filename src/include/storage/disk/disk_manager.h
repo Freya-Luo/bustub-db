@@ -34,7 +34,10 @@ class DiskManager {
    */
   explicit DiskManager(const std::string &db_file);
 
-  ~DiskManager() = default;
+  /** FOR TEST / LEADERBOARD ONLY, used by DiskManagerMemory */
+  DiskManager() = default;
+
+  virtual ~DiskManager() = default;
 
   /**
    * Shut down the disk manager and close all the file resources.
@@ -46,14 +49,14 @@ class DiskManager {
    * @param page_id id of the page
    * @param page_data raw page data
    */
-  void WritePage(page_id_t page_id, const char *page_data);
+  virtual void WritePage(page_id_t page_id, const char *page_data);
 
   /**
    * Read a page from the database file.
    * @param page_id id of the page
    * @param[out] page_data output buffer
    */
-  void ReadPage(page_id_t page_id, char *page_data);
+  virtual void ReadPage(page_id_t page_id, char *page_data);
 
   /**
    * Flush the entire log buffer into disk.
@@ -69,16 +72,16 @@ class DiskManager {
    * @param offset offset of the log entry in the file
    * @return true if the read was successful, false otherwise
    */
-  bool ReadLog(char *log_data, int size, int offset);
+  auto ReadLog(char *log_data, int size, int offset) -> bool;
 
   /** @return the number of disk flushes */
-  int GetNumFlushes() const;
+  auto GetNumFlushes() const -> int;
 
   /** @return true iff the in-memory content has not been flushed yet */
-  bool GetFlushState() const;
+  auto GetFlushState() const -> bool;
 
   /** @return the number of disk writes */
-  int GetNumWrites() const;
+  auto GetNumWrites() const -> int;
 
   /**
    * Sets the future which is used to check for non-blocking flushes.
@@ -87,20 +90,20 @@ class DiskManager {
   inline void SetFlushLogFuture(std::future<void> *f) { flush_log_f_ = f; }
 
   /** Checks if the non-blocking flush future was set. */
-  inline bool HasFlushLogFuture() { return flush_log_f_ != nullptr; }
+  inline auto HasFlushLogFuture() -> bool { return flush_log_f_ != nullptr; }
 
- private:
-  int GetFileSize(const std::string &file_name);
+ protected:
+  auto GetFileSize(const std::string &file_name) -> int;
   // stream to write log file
   std::fstream log_io_;
   std::string log_name_;
   // stream to write db file
   std::fstream db_io_;
   std::string file_name_;
-  int num_flushes_;
-  int num_writes_;
-  bool flush_log_;
-  std::future<void> *flush_log_f_;
+  int num_flushes_{0};
+  int num_writes_{0};
+  bool flush_log_{false};
+  std::future<void> *flush_log_f_{nullptr};
   // With multiple buffer pool instances, need to protect file access
   std::mutex db_io_latch_;
 };
